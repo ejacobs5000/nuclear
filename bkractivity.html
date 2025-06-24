@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breaker Simulator with Schematic</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      transition: background-color 0.5s;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #schematic-container {
+      position: relative;
+      display: inline-block;
+      margin-top: 20px;
+    }
+    #schematic {
+      width: 700px;
+    }
+    .component {
+      position: absolute;
+      border: 2px solid #444;
+      resize: both;
+      overflow: auto;
+      cursor: move;
+      z-index: 10;
+    }
+    .breaker.open, .contact.open {
+      background-color: green;
+    }
+    .breaker.closed, .contact.closed {
+      background-color: red;
+    }
+    .label {
+      position: absolute;
+      font-size: 12px;
+      background: white;
+      padding: 1px 3px;
+      border: 1px solid #ccc;
+      z-index: 15;
+    }
+    .logic-contact {
+      background-color: transparent !important;
+    }
+    .logic-contact.closed::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      background: red;
+      top: 50%;
+      left: 0;
+      transform: rotate(-45deg);
+    }
+    #result, #scenario {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* Floating AI Button */
+    #ai-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #0071c5;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: background-color 0.3s;
+      z-index: 1000;
+    }
+
+    #ai-button:hover {
+      background-color: #005b9e;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>PPLC Heater Auto Trip Interlocks</h1>
+  <div id="schematic-container">
+    <img src="image0.jpeg" id="schematic" alt="Schematic" />
+    <div class="component contact closed" id="B-1" style="top: 329px; left: 121px; width: 40px; height: 35px;"></div>
+    <div class="component contact closed" id="B-2" style="top: 369px; left: 174px; width: 39px; height: 35px;"></div>
+    <div class="component breaker closed" id="B-3" style="top: 408px; left: 221px; width: 44px; height: 36px;"></div>
+    <div class="component breaker closed" id="B-4" style="top: 370px; left: 443px; width: 40px; height: 34px;"></div>
+    <div class="component breaker closed" id="B-5" style="top: 327px; left: 496px; width: 42px; height: 35px;"></div>
+    <div class="component breaker closed" id="B-6" style="top: 407px; left: 395px; width: 41px; height: 34px;"></div>
+    <div class="component contact closed" id="P-1" style="top: 287px; left: 74px; width: 38px; height: 35px;"></div>
+    <div class="component contact closed" id="P-2" style="top: 284px; left: 548px; width: 43px; height: 33px;"></div>
+    <div class="component breaker closed" id="A4160" style="top: 107px; left: 149px; width: 40px; height: 35px;"></div>
+    <div class="component breaker closed" id="B4160" style="top: 107px; left: 476px; width: 40px; height: 35px;"></div>
+
+    <!-- Logic Squares -->
+    <div class="component logic-contact closed" id="X1" style="top: 378px; left: 31px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X2" style="top: 421px; left: 81px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X3" style="top: 457px; left: 136px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X4" style="top: 500px; left: 182px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X5" style="top: 495px; left: 440px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X6" style="top: 456px; left: 490px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X7" style="top: 414px; left: 540px; width: 40px; height: 40px;"></div>
+    <div class="component logic-contact closed" id="X8" style="top: 371px; left: 591px; width: 40px; height: 40px;"></div>
+  </div>
+
+  <div id="scenario"></div>
+  <div id="result"></div>
+  <button onclick="generateScenario()">New Scenario</button>
+  <button onclick="checkHeaters()">Check Answer</button>
+
+  <!-- Floating AI Button -->
+  <a href="aipoc.html" id="ai-button" title="AI: Check Your Understanding">➡️ AI: Check Your Understanding</a>
+
+  <script>
+    const scenarios = [
+      { label: 'Unit 1: A-train Pressurizer Lo-Lo Level', unit: 1, side: 'A', xOpen: 'both', trip4160: false },
+      { label: 'Unit 1: B-train Pressurizer Lo-Lo Level', unit: 1, side: 'B', xOpen: 'both', trip4160: false },
+      { label: 'Unit 1: A-train SIAS', unit: 1, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 1: B-train SIAS', unit: 1, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 1: LOOP', unit: 1, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 2: A-train Pressurizer Lo-Lo Level', unit: 2, side: 'A', xOpen: 'B', trip4160: 'A' },
+      { label: 'Unit 2: B-train Pressurizer Lo-Lo Level', unit: 2, side: 'B', xOpen: 'A', trip4160: 'B' },
+      { label: 'Unit 2: A-train SIAS', unit: 2, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 2: B-train SIAS', unit: 2, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 2: LOOP', unit: 2, side: 'both', xOpen: 'both', trip4160: true },
+      { label: 'Unit 2: Hi Hi Pressure Cutoff', unit: 2, side: 'both', xOpen: 'both', trip4160: false }
+    ];
+
+    let currentScenario = null;
+
+    function toggleComponent(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('open');
+      el.classList.toggle('closed');
+    }
+
+    document.querySelectorAll('.breaker, .contact').forEach(el => {
+      el.addEventListener('click', () => toggleComponent(el.id));
+    });
+
+    document.querySelectorAll('.logic-contact').forEach(el => {
+      el.addEventListener('click', () => el.classList.toggle('closed'));
+    });
+
+    function generateScenario() {
+      document.querySelectorAll('.breaker, .contact').forEach(el => {
+        el.classList.remove('open');
+        el.classList.add('closed');
+      });
+      document.querySelectorAll('.logic-contact').forEach(el => {
+        el.classList.add('closed');
+      });
+
+      document.getElementById('result').textContent = '';
+      currentScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+      document.getElementById('scenario').textContent = `Scenario: ${currentScenario.label}`;
+      document.body.style.backgroundColor = currentScenario.unit === 1 ? '#cdf3e3' : '#f4e1da';
+    }
+
+    function checkHeaters() {
+      if (!currentScenario) {
+        document.getElementById('result').textContent = '⚠️ Generate a scenario first!';
+        return;
+      }
+
+      const xA = ['X1', 'X2', 'X3', 'X4'];
+      const xB = ['X5', 'X6', 'X7', 'X8'];
+      const allX = [...xA, ...xB];
+      const openX = [];
+
+      if (currentScenario.xOpen === 'A') openX.push(...xA);
+      else if (currentScenario.xOpen === 'B') openX.push(...xB);
+      else openX.push(...allX);
+
+      const xCorrect = allX.every(id => {
+        const el = document.getElementById(id);
+        const shouldOpen = openX.includes(id);
+        return shouldOpen ? !el.classList.contains('closed') : el.classList.contains('closed');
+      });
+
+      let breakerCorrect = true;
+      if (currentScenario.trip4160 === 'A') {
+        breakerCorrect = !document.getElementById('A4160').classList.contains('closed') &&
+                          document.getElementById('B4160').classList.contains('closed');
+      } else if (currentScenario.trip4160 === 'B') {
+        breakerCorrect = document.getElementById('A4160').classList.contains('closed') &&
+                         !document.getElementById('B4160').classList.contains('closed');
+      } else if (currentScenario.trip4160 === true) {
+        breakerCorrect = !document.getElementById('A4160').classList.contains('closed') &&
+                         !document.getElementById('B4160').classList.contains('closed');
+      } else {
+        breakerCorrect = document.getElementById('A4160').classList.contains('closed') &&
+                         document.getElementById('B4160').classList.contains('closed');
+      }
+
+      const pass = xCorrect && breakerCorrect;
+      document.getElementById('result').textContent = pass ? '✅ Correct setup!' : '❌ Try again! Something is off.';
+    }
+  </script>
+</body>
+</html>
