@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NextEra AI – Pressurizer Heater Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f8fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #0071c5;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 10px 0;
+      font-size: 26px;
+    }
+
+    #chatbox {
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      min-height: 300px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .message {
+      margin: 10px 0;
+      line-height: 1.4;
+    }
+
+    .user {
+      text-align: right;
+      color: #0071c5;
+      font-weight: bold;
+    }
+
+    .bot {
+      text-align: left;
+      color: #333;
+    }
+
+    .input-area {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    input[type="text"] {
+      width: 60%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      background-color: #0071c5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005b9e;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>NextEra AI Assistant</h1>
+    <p style="margin: 0;">Ask about Pressurizer Heater Operation</p>
+  </header>
+
+  <div id="chatbox">
+    <div class="message bot">NextEra AI: Got any questions on pressurizer heaters? If yes, ask away now. If not, we'll do a quick check for understanding before you move into pressurizer sprays!</div>
+  </div>
+
+  <div class="input-area">
+    <input id="userInput" type="text" placeholder="e.g. When do the heaters turn on?" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const chatbox = document.getElementById("chatbox");
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      addMessage("user", userText);
+      input.value = "";
+
+      setTimeout(() => {
+        const reply = getBotReply(userText);
+        addMessage("bot", reply);
+      }, 700);
+    }
+
+    function addMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = `message ${sender}`;
+      msg.textContent = (sender === "user" ? "You: " : "NextEra AI: ") + text;
+      chatbox.appendChild(msg);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function getBotReply(input) {
+      input = input.toLowerCase();
+
+      if (input.includes("when do the heaters turn on") || input.includes("start") || input.includes("activate")) {
+        return "Pressurizer heaters activate automatically when the system pressure drops below the programmed setpoint, typically around 2200 psi.";
+      } else if (input.includes("what is the purpose") || input.includes("why do we use heaters")) {
+        return "The pressurizer heaters maintain system pressure by heating water to increase steam pressure, preventing boiling in the reactor coolant system.";
+      } else if (input.includes("how many heaters") || input.includes("banks")) {
+        return "Most pressurizer designs include multiple banks of heaters—often split into control and backup groups—for redundancy and pressure control.";
+      } else if (input.includes("setpoint")) {
+        return "Typical heater setpoints range from 2200 to 2250 psi, depending on the plant design.";
+      } else if (input.includes("fail") || input.includes("failure") || input.includes("trip")) {
+        return "In case of heater failure, spray valves and backup heater banks help regulate pressure. Operators are alerted via control room alarms.";
+      } else {
+        return "I'm still learning that one — please consult technical procedures or your shift supervisor for more details.";
+      }
+    }
+  </script>
+
+</body>
+</html>
