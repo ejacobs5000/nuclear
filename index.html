@@ -67,6 +67,28 @@
       font-size: 16px;
       cursor: pointer;
     }
+
+    /* Floating AI Button */
+    #ai-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #0071c5;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: background-color 0.3s;
+      z-index: 1000;
+    }
+
+    #ai-button:hover {
+      background-color: #005b9e;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -99,6 +121,9 @@
   <div id="result"></div>
   <button onclick="generateScenario()">New Scenario</button>
   <button onclick="checkHeaters()">Check Answer</button>
+
+  <!-- Floating AI Button -->
+  <a href="aipoc.html" id="ai-button" title="AI: Check Your Understanding">➡️ AI: Check Your Understanding</a>
 
   <script>
     const scenarios = [
